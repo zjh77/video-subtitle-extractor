@@ -1093,8 +1093,10 @@ class SubtitleExtractor:
             except Exception as e:
                 traceback.print_exc()
 
-    def manage_process(pid):
-        pass
+    def manage_process(self, pid):
+        if pid is None:
+            return
+        ProcessManager.instance().add_pid(pid)
 
 if __name__ == '__main__':
     multiprocessing.set_start_method("spawn")
