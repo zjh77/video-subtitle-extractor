@@ -499,7 +499,7 @@ class SubtitleExtractor:
                 if output:
                     self.append_output(output.decode("utf-8", errors="replace").strip())
                 if p.returncode:
-                    raise RuntimeError(f"VideoSubFinder exited with code {p.returncode}")
+                    self.append_output(f"VideoSubFinder exited with code {p.returncode}; continuing with generated frames.")
             finally:
                 self.vsf_running = False
         else:
