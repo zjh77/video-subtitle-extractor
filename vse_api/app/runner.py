@@ -66,6 +66,12 @@ def run_job(job_id: str) -> None:
         extractor = SubtitleExtractor(str(source_path))
         _bind_job_paths(extractor, paths, source_path)
 
+        # Keep the upstream extractor untouched while adapting its legacy hook for bound use.
+        def manage_process(self: SubtitleExtractor, pid: int | None) -> None:
+            return None
+
+        extractor.manage_process = MethodType(manage_process, extractor)
+
         if area is not None:
             extractor.sub_area = area
 

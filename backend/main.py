@@ -482,8 +482,7 @@ class SubtitleExtractor:
             cpu_count = config.videoSubFinderCpuCores.value
         if platform.system() == 'Windows':
             # 定义执行命令
-            cuda_option = "--use_cuda " if self.hardware_accelerator.has_cuda() else ""
-            cmd = f"{path_vsf} {cuda_option}-c -r -i \"{self.video_path}\" -o \"{self.temp_output_dir}\" -ces \"{self.vsf_subtitle}\" "
+            cmd = f"{path_vsf} --use_cuda -c -r -i \"{self.video_path}\" -o \"{self.temp_output_dir}\" -ces \"{self.vsf_subtitle}\" "
             cmd += f"-te {top_end} -be {bottom_end} -le {left_end} -re {right_end} -nthr {cpu_count} -nocrthr {cpu_count} "
             cmd += f"--open_video_{config.videoSubFinderDecoder.value.value.lower()} "
             # 计算进度
@@ -491,15 +490,11 @@ class SubtitleExtractor:
                 self.vsf_running = True
                 Thread(target=count_process, daemon=True).start()       
                 # 已知BUG: test_chinese_cht.flv在net drive上会导致无法停止, 但在本地不会, 可能是vsf的原因
-                p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, bufsize=1,
+                p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=1,
                                     close_fds='posix' in sys.builtin_module_names, shell=False, creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
                 ProcessManager.instance().add_process(p)
                 self.manage_process(p.pid)
-                output, _ = p.communicate()
-                if output:
-                    self.append_output(output.decode("utf-8", errors="replace").strip())
-                if p.returncode:
-                    self.append_output(f"VideoSubFinder exited with code {p.returncode}; continuing with generated frames.")
+                p.wait()
             finally:
                 self.vsf_running = False
         else:
@@ -1098,10 +1093,8 @@ class SubtitleExtractor:
             except Exception as e:
                 traceback.print_exc()
 
-    def manage_process(self, pid):
-        if pid is None:
-            return
-        ProcessManager.instance().add_pid(pid)
+    def manage_process(pid):
+        pass
 
 if __name__ == '__main__':
     multiprocessing.set_start_method("spawn")
